@@ -52,7 +52,7 @@ class Trace
 	protected function _trace($msg, $level = DEBUG, $file = '', $line = '')
 	{
 		if ( !in_array($level, array(self::$TRACE_ALL, self::$DEBUG, self::$ERROR, self::$NOTICE, self::$TRACE_OFF, self::$WARN))
-			|| 0 === ($level & $GLOBALS['config']['global']['traceLevel']) )
+			|| 0 === ($level & Config::configForKeyPath('global.traceLevel') )
 		{
 			return;
 		}

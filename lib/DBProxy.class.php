@@ -2,96 +2,55 @@
 class DBProxy
 {
     private static $queryNum = 0;
-    private static $insertNum = 0;
-    private static $updateNum = 0;
-    private static $deleteNum = 0;
-    private static $selectNum = 0;
-    private static $readNum = 0;
-    private static $writeNum = 0;
     private static $sqlLog = array();
     private static $timeSpan = 0;
 
-    private $conn_r = null;
-    private $conn_w = null;
+    private static $stat = array();
 
-    private static $conn_pool = array();
+    protected $conn;
 
-    private $host;
-    private $dbname;
+    protected $db;
 
-    private static $_instance;
-
-    /**
-     * @return DBProxy
-     */
-    public static function getInstance() {
-        if (null === self::$_instance) {
-            self::$_instance = new DBProxy();
-        }
-        return self::$_instance;
+    public static function getConnection($db) {
+        $proxy = new DBProxy($db);
+        return $proxy;
     }
 
-    public function connect($host = null, $username = null, $password = null, $dbname = null)
+    function __construct($db = null) {
+        $this->db = $db;
+    }
+
+    public function connect($host, $username, $password, $dbname, $port = 3306)
     {
-        $connKey = serialize($host);
-        $conn = null;
-        if (isset(self::$conn_pool[$connKey])) {
-            $conn = self::$conn_pool[$connKey];
+        $mysqli = new mysqli($host, $username, $password, $dbname, $port);
+        if ($mysqli) {
+            $mysqli->query('SET NAMES UTF8');
         } else {
-            Trace::debug('connect db(host:'.$host.' username:'.$username.' password:'.$password.')', __FILE__, __LINE__);
-            $conn = @mysql_connect($host, $username, $password);
-            if ($conn) {
-                self::$conn_pool[$connKey] = $conn;
-            } else {
-                Trace::fatal('mysql_connect failed', __FILE__, __LINE__);
-            }
+            trigger_error('connect db failed. error:'.$mysqli->errno);
         }
 
-        if (is_resource($conn)) {
-            $this->selectDB($dbname, $conn);
-        }
-
-        return $conn;
+        return $mysqli;
     }
 
-    public function connectDB($dbname) {
-        $runtime = Config::configForKeyPath('global.runtime');
-        $dbConfig = Config::configForKeyPath('database.'.$runtime.'.'.$dbname);
+    public function connectDB($db, $rw = 'w') {
+        DAssert::assert(in_array($rw, array('r', 'w')), 'illegal rw', __FILE__, __LINE__);
 
-        foreach (array('r', 'w') as $rw) {
-            $conf = $dbConfig[$rw];
-            $dbIndex = rand(0, count($conf['hosts']) - 1);
-            $host = $conf['hosts'][$dbIndex];
-            $username = $conf['username'];
-            $password = $conf['password'];
-            $dbname = $conf['dbname'];
+        $conf = Config::runtimeConfigForKeyPath('database.$.'.$db.'.'.$rw);
 
-            $conn = 'conn_'.$rw;
-            $this->$conn = $this->connect($host, $username, $password, $dbname);
-        }
+        $dbIndex = rand(0, count($conf['hosts']) - 1);
+        $host = $conf['hosts'][$dbIndex]['h'];
+        $port = $conf['hosts'][$dbIndex]['p'];
+        $username = $conf['username'];
+        $password = $conf['password'];
+        $dbname = $conf['dbname'];
 
-    }
-
-    public function getConnection($rw = 'w') {
-        Dojet::assert(in_array($rw, array('r', 'w')), 'illegal rw', __FILE__, __LINE__);
-        $conn = 'conn_'.$rw;
-        return $this->$conn;
-    }
-
-    public function selectDB($dbname, $conn) {
-        Trace::debug('select db: '.$dbname, __FILE__, __LINE__);
-
-        @mysql_select_db($dbname, $conn);
-        $this->dbname = $dbname;
-        @mysql_query('SET NAMES UTF8', $conn);
+        $this->conn = $this->connect($host, $username, $password, $dbname, $port);
+        return $this->conn;
     }
 
     public function close()
     {
-        @mysql_close($this->conn_r);
-        @mysql_close($this->conn_w);
-        $this->dbname = null;
-        $this->conn_r = $this->conn_w = null;
+        $this->conn->close();
     }
 
     public function beginTransaction() {
@@ -110,99 +69,86 @@ class DBProxy
         self::_doQuery('ROLLBACK', 'w');
     }
 
-    protected function _doQuery($strSql, $rw)
+    protected function _doQuery($sql, $rw)
     {
         self::$queryNum++;
 
         $startTime = microtime(true);
-        $conn = $this->getConnection($rw);
-        $ret = mysql_query($strSql, $conn);
+        $conn = $this->connectDB($this->db, $rw);
+        $ret = $this->conn->query($sql);
         $endTime = microtime(true);
 
         if (MDict::D('is_debug')) {
             $timeSpan = $endTime - $startTime;
-            self::$sqlLog[] = array('db' => $this, 'conn' => $conn, 'sql' => $strSql, 'span' => sprintf("%.3fms", $timeSpan * 1000));
+            self::$sqlLog[] = array('db' => $this, 'conn' => $conn, 'sql' => $sql, 'span' => sprintf("%.3fms", $timeSpan * 1000));
             self::$timeSpan+= $timeSpan;
         }
 
-        if (mysql_errno($conn) !== 0) {
-            Trace::fatal('query failed. errno:'.mysql_errno().' error:'.mysql_error(), __FILE__, __LINE__);
+        if ($this->conn->errno !== 0) {
+            Trace::fatal('query failed. errno:'.$this->conn->errno.' error:'.$this->conn->error, __FILE__, __LINE__);
         }
         return $ret;
     }
 
-    public function doInsert($strSql)
+    public function doInsert($sql)
     {
-        self::$insertNum++;
-        return $this->_doQuery($strSql, 'w');
+        self::$stat['insert']++;
+        return $this->_doQuery($sql, 'w');
     }
 
-    public function doUpdate($strSql)
+    public function doUpdate($sql)
     {
-        self::$updateNum++;
-        return $this->_doQuery($strSql, 'w');
+        self::$stat['update']++;
+        return $this->_doQuery($sql, 'w');
     }
 
-    public function doDelete($strSql)
+    public function doDelete($sql)
     {
-        self::$deleteNum++;
-        return $this->_doQuery($strSql, 'w');
+        self::$stat['delete']++;
+        return $this->_doQuery($sql, 'w');
     }
 
-    public function doSelect($strSql)
+    public function doSelect($sql)
     {
-        self::$selectNum++;
-        return $this->_doQuery($strSql, 'r');
+        self::$stat['select']++;
+        return $this->_doQuery($sql, 'r');
     }
 
     public function doRead($sql) {
-        self::$readNum++;
+        self::$stat['read']++;
         return $this->_doQuery($sql, 'r');
     }
 
     public function doWrite($sql) {
-        self::$writeNum++;
+        self::$stat['write']++;
         return $this->_doQuery($sql, 'w');
     }
 
-/*
-    //  这个方法不再用，请用doRead, doWrite
-    public function doQuery($sql) {
-        return $this->_doQuery($sql);
-    }
-//*/
-
     public function affectedRows() {
-        $conn = self::getConnection('w');
-        return mysql_affected_rows($conn);
+        return $this->conn->affected_rows;
     }
 
     public function lastInsertID() {
-        $ret = $this->doWrite("SELECT LAST_INSERT_ID()");
-        $rs = mysql_fetch_array($ret);
-        if (is_null($rs)) {
-            return null;
-        }
-        return $rs[0];
+        return $this->conn->insert_id;
     }
 
     public function lastError() {
-        return mysql_error();
+        return $this->conn->error;
     }
 
     public function lastErrno() {
-        return mysql_errno();
+        return $this->conn->errno;
     }
 
-    public function rs2array($strSql)
+    public function rs2array($sql)
     {
-        $rs = $this->doSelect($strSql);
+        $rs = $this->doSelect($sql);
         if (false === $rs) {
             return false;
         }
         $ret = array();
         if ($rs) {
-            while ($row = @mysql_fetch_assoc($rs)) {
+            while ($row = $rs->fetch_assoc()) {
                 $ret[] = $row;
             }
         }
@@ -216,7 +162,7 @@ class DBProxy
         }
         $ret = array();
         if ($rs) {
-            while ($row = @mysql_fetch_row($rs)) {
+            while ($row = $rs->fetch_row()) {
                 $ret[] = $row[0];
             }
         }
@@ -230,7 +176,7 @@ class DBProxy
         }
         $ret = array();
         if ($rs) {
-            while ($row = @mysql_fetch_assoc($rs)) {
+            while ($row = $rs->fetch_assoc($rs)) {
                 $resultKey = $row[$key];
                 $ret[$resultKey] = $row;
             }
@@ -238,28 +184,28 @@ class DBProxy
         return  $ret;
     }
 
-    public function rs2rowline($strSql)
+    public function rs2rowline($sql)
     {
-        $rs = $this->doSelect($strSql);
+        $rs = $this->doSelect($sql);
         if (false === $rs) {
             return false;
         }
-        $ret = @mysql_fetch_assoc($rs);
+        $ret = $rs->fetch_assoc($rs);
         if (false === $ret) {
             return null;
         }
         return  $ret;
     }
 
-    public function rs2rowcount($strSql)
+    public function rs2rowcount($sql)
     {
-        $ret = $this->rs2firstvalue($strSql);
+        $ret = $this->rs2firstvalue($sql);
         return $ret;
     }
 
-    public function rs2firstvalue($strSql)
+    public function rs2firstvalue($sql)
     {
-        $row = $this->rs2rowline($strSql);
+        $row = $this->rs2rowline($sql);
         if (false === $row) {
             return false;
         } elseif (null === $row) {
@@ -279,9 +225,9 @@ class DBProxy
         return $this->rs2firstvalue("SELECT FOUND_ROWS()");
     }
 
-    public static function realEscapeString($string)
+    public function realEscapeString($string)
     {
-        return @mysql_real_escape_string($string);
+        return $this->conn->real_escape_string($string);
     }
 
     public static function getQueryNum()
@@ -291,22 +237,22 @@ class DBProxy
 
     public static function getInsertNum()
     {
-        return self::$insertNum;
+        return self::$stat['insert'];
     }
 
     public static function getDeleteNum()
     {
-        return self::$deleteNum;
+        return self::$stat['delete'];
     }
 
     public static function getUpdateNum()
     {
-        return self::$updateNum;
+        return self::$stat['update'];
     }
 
     public static function getSelectNum()
     {
-        return self::$selectNum;
+        return self::$stat['select'];
     }
 
     public static function getSqlLog()
@@ -325,12 +271,12 @@ class DBProxy
      * @param string $fields_values
      * @param DBProxy $dbProxy
      */
-    public static function insertStatement($table, $fields_values, $dbProxy = null) {
+    public function insertStatement($table, $fields_values) {
         $arrayFields = array();
         $arrayValues = array();
         foreach ($fields_values as $field => $value) {
             $arrayFields[] = '`'.$field.'`';
-            $arrayValues[] = "'".DBProxy::realEscapeString($value)."'";
+            $arrayValues[] = "'".$this->realEscapeString($value)."'";
         }
         $strFields = join(', ', $arrayFields);
         $strValues = join(', ', $arrayValues);
@@ -346,19 +292,19 @@ class DBProxy
      * @param string $updates
      * @param DBProxy $dbProxy
      */
-    public static function insertOrUpdateStatement($table, $fields_values, $updates, $dbProxy = null) {
+    public function insertOrUpdateStatement($table, $fields_values, $updates) {
         $arrayFields = array();
         $arrayValues = array();
         foreach ($fields_values as $field => $value) {
             $arrayFields[] = '`'.$field.'`';
-            $arrayValues[] = "'".DBProxy::realEscapeString($value)."'";
+            $arrayValues[] = "'".$this->realEscapeString($value)."'";
         }
         $strFields = join(', ', $arrayFields);
         $strValues = join(', ', $arrayValues);
 
         $arrayUpdates = array();
         foreach ($updates as $upKey => $upValue) {
-            $arrayUpdates[] = "`".DBProxy::realEscapeString($upKey)."`='".DBProxy::realEscapeString($upValue)."'";
+            $arrayUpdates[] = "`".$this->realEscapeString($upKey)."`='".DBProxy::realEscapeString($upValue)."'";
         }
         $strUpdates = join(', ', $arrayUpdates);
 
@@ -369,10 +315,10 @@ class DBProxy
         return $sql;
     }
 
-    public static function updateStatement($table, $updates, $where, $dbProxy, $limit = 0x7fffffff) {
+    public function updateStatement($table, $updates, $where, $limit = 0x7fffffff) {
         $arrayUpdates = array();
         foreach ($updates as $upKey => $upValue) {
-            $arrayUpdates[] = "`".$dbProxy->realEscapeString($upKey)."`='".$dbProxy->realEscapeString($upValue)."'";
+            $arrayUpdates[] = "`".$this->realEscapeString($upKey)."`='".$dbProxy->realEscapeString($upValue)."'";
         }
         $strUpdates = join(', ', $arrayUpdates);
 
@@ -383,108 +329,6 @@ class DBProxy
 
         return $sql;
     }
-
-    public function doDeleteWithAffectedRows($sql) {
-        $result = MResult::result(MResult::FAIL);
-
-        do {
-            $ret = $this->doDelete($sql);
-            if (false === $ret) {
-                Trace::debug('delete failed', __FILE__, __LINE__);
-                break;
-            }
-
-            $ret = $this->affectedRows();
-            if (false === $ret) {
-                Trace::debug('get affect rows failed', __FILE__, __LINE__);
-            }
-            $info = $ret;
-
-            $result = MResult::result(MResult::SUCCESS, $info);
-
-        } while (false);
-
-        return $result;
-    }
-
-    public function doUpdateWithAffectedRows($sql) {
-        $result = MResult::result(MResult::FAIL);
-
-        do {
-            $ret = $this->doUpdate($sql);
-            if (false === $ret) {
-                Trace::debug('update failed', __FILE__, __LINE__);
-                $result = MResult::result(MResult::FAIL, mysql_error());
-                break;
-            }
-
-            $ret = $this->affectedRows();
-            if (false === $ret) {
-                Trace::debug('get affect rows failed', __FILE__, __LINE__);
-            }
-            $info = $ret;
-
-            $result = MResult::result(MResult::SUCCESS, $info);
-
-        } while (false);
-
-        return $result;
-    }
-
-    public function doInsertWithInsertedID($sql) {
-        $result = MResult::result(MResult::FAIL);
-        do {
-            $ret = $this->doInsert($sql);
-            if (false === $ret) {
-                Trace::debug('insert failed', __FILE__, __LINE__);
-                $result = MResult::result(MResult::FAIL, mysql_error());
-                break;
-            }
-
-            $ret = $this->lastInsertID();
-            if (false === $ret) {
-                Trace::debug('get last insert id failed', __FILE__, __LINE__);
-            }
-            $insertID = $ret;
-
-            $result = MResult::result(MResult::SUCCESS, $insertID);
-
-        } while (false);
-
-        return $result;
-    }
-
-    public function doSelectWithFoundRows($sql) {
-        $result = MResult::result(MResult::FAIL);
-
-        do {
-            $ret = $this->rs2array($sql);
-            if (false === $ret) {
-                Trace::debug('select failed', __FILE__, __LINE__);
-                $result = MResult::result(MResult::FAIL, mysql_error());
-                break;
-            }
-            $recordset = $ret;
-
-            $ret = $this->rs2foundrows();
-            if (false === $ret) {
-                Trace::debug('get foundrows failed', __FILE__, __LINE__);
-                $result = MResult::result(MResult::FAIL, mysql_error());
-                break;
-            }
-            $foundRows = $ret;
-
-            $info = array(
-                'recordset' => $recordset,
-                'foundrows' => $foundRows,
-            );
-            $result = MResult::result(MResult::SUCCESS, $info);
-
-        } while (false);
-
-        return $result;
-    }
-
 
 }
 

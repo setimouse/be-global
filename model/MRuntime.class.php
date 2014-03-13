@@ -22,7 +22,7 @@ class MRuntime {
     }
 
     function __construct() {
-        $this->runtime = $GLOBALS['config']['global']['runtime'];
+        $this->runtime = Config::configForKeyPath('runtime');
         $this->stack = array();
     }
 

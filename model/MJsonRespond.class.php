@@ -37,7 +37,7 @@ class MJsonRespond
 		assert(array_key_exists($key, $this->result));
 		if ('status' === $key) {
     	    $errorMessage = Config::configForKeyPath('error');
-    	    if (key_exists($value, $errorMessage)) {
+    	    if (is_array($errorMessage) && key_exists($value, $errorMessage)) {
     	    	$this->msg = $errorMessage[$value];
     	    }
 		} elseif ('msg' === $key) {
