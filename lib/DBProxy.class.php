@@ -1,143 +1,122 @@
 <?php
-class DBProxy
-{
-    private static $queryNum = 0;
-    private static $sqlLog = array();
-    private static $timeSpan = 0;
+/**
+ * DBProxy
+ *
+ * @author liyan
+ * @since 2014 4 24
+ */
+class DBProxy {
 
-    private static $stat = array();
+    protected static $stat = array('select' => 0, 'insert' => 0, 'update' => 0, 'delete' => 0, 'read' => 0, 'write' => 0);
 
-    protected $conn;
+    protected $dbConfig;
 
-    protected $db;
+    private $conn_r;
+    private $conn_w;
 
-    public static function getConnection($db) {
-        $proxy = new DBProxy($db);
-        return $proxy;
+    private $lastUsedConn;
+
+    function __construct($dbConfig) {
+        $this->dbConfig = $dbConfig;
+        $this->conn_r = $this->conn_w = null;
     }
 
-    function __construct($db = null) {
-        $this->db = $db;
-    }
+    protected function getConnection($rw = 'w') {
+        DAssert::assert(in_array($rw, array('r', 'w')), 'illegal rw');
 
-    public function connect($host, $username, $password, $dbname, $port = 3306)
-    {
-        $mysqli = new mysqli($host, $username, $password, $dbname, $port);
-        if ($mysqli) {
-            $mysqli->query('SET NAMES UTF8');
-        } else {
-            trigger_error('connect db failed. error:'.$mysqli->errno);
+        $var_conn = 'conn_'.$rw;
+        $conn = &$this->$var_conn;
+
+        if (!is_resource($conn)) {
+            $config = Config::configForKeyPath($rw, $this->dbConfig);
+            $conn = $this->connect($config);
         }
 
-        return $mysqli;
+        $this->lastUsedConn = $conn;
+
+        return $conn;
     }
 
-    public function connectDB($db, $rw = 'w') {
-        DAssert::assert(in_array($rw, array('r', 'w')), 'illegal rw', __FILE__, __LINE__);
+    private function connect($config) {
+        srand(time());
+        $dbIndex = rand(0, count($config['hosts']) - 1);
+        $host = $config['hosts'][$dbIndex]['h'];
+        $port = $config['hosts'][$dbIndex]['p'];
+        $username = $config['username'];
+        $password = $config['password'];
+        $dbname = $config['dbname'];
 
-        $conf = Config::runtimeConfigForKeyPath('database.$.'.$db.'.'.$rw);
+        $connection = new DBMysqli($host, $username, $password, $dbname, $port);
 
-        $dbIndex = rand(0, count($conf['hosts']) - 1);
-        $host = $conf['hosts'][$dbIndex]['h'];
-        $port = $conf['hosts'][$dbIndex]['p'];
-        $username = $conf['username'];
-        $password = $conf['password'];
-        $dbname = $conf['dbname'];
+        $connection->query('SET NAMES "UTF8"');
 
-        $this->conn = $this->connect($host, $username, $password, $dbname, $port);
-        return $this->conn;
-    }
-
-    public function close()
-    {
-        $this->conn->close();
+        return $connection;
     }
 
     public function beginTransaction() {
-        self::_doQuery('BEGIN', 'w');
+        $this->getConnection('w')->query('BEGIN');
     }
 
     public function endTransaction() {
-        self::_doQuery('END', 'w');
+        $this->getConnection('w')->query('END');
     }
 
     public function commit() {
-        self::_doQuery('COMMIT', 'w');
+        $this->getConnection('w')->query('COMMIT');
     }
 
     public function rollback() {
-        self::_doQuery('ROLLBACK', 'w');
-    }
-
-    protected function _doQuery($sql, $rw)
-    {
-        self::$queryNum++;
-
-        $startTime = microtime(true);
-        $conn = $this->connectDB($this->db, $rw);
-        $ret = $this->conn->query($sql);
-        $endTime = microtime(true);
-
-        if (MDict::D('is_debug')) {
-            $timeSpan = $endTime - $startTime;
-            self::$sqlLog[] = array('db' => $this, 'conn' => $conn, 'sql' => $sql, 'span' => sprintf("%.3fms", $timeSpan * 1000));
-            self::$timeSpan+= $timeSpan;
-        }
-
-        if ($this->conn->errno !== 0) {
-            Trace::fatal('query failed. errno:'.$this->conn->errno.' error:'.$this->conn->error, __FILE__, __LINE__);
-        }
-        return $ret;
+        $this->getConnection('w')->query('ROLLBACK');
     }
 
     public function doInsert($sql)
     {
         self::$stat['insert']++;
-        return $this->_doQuery($sql, 'w');
+        return $this->doWrite($sql);
     }
 
     public function doUpdate($sql)
     {
         self::$stat['update']++;
-        return $this->_doQuery($sql, 'w');
+        return $this->doWrite($sql);
     }
 
     public function doDelete($sql)
     {
         self::$stat['delete']++;
-        return $this->_doQuery($sql, 'w');
+        return $this->doWrite($sql);
     }
 
     public function doSelect($sql)
     {
         self::$stat['select']++;
-        return $this->_doQuery($sql, 'r');
+        return $this->doRead($sql);
     }
 
     public function doRead($sql) {
         self::$stat['read']++;
-        return $this->_doQuery($sql, 'r');
+        return $this->getConnection('r')->query($sql);
     }
 
     public function doWrite($sql) {
         self::$stat['write']++;
-        return $this->_doQuery($sql, 'w');
+        return $this->getConnection('w')->query($sql);
     }
 
     public function affectedRows() {
-        return $this->conn->affected_rows;
+        return $this->lastUsedConn->affectedRows();
     }
 
-    public function lastInsertID() {
-        return $this->conn->insert_id;
+    public function insertID() {
+        return $this->lastUsedConn->insert_id();
     }
 
-    public function lastError() {
-        return $this->conn->error;
+    public function error() {
+        return $this->lastUsedConn->error();
     }
 
-    public function lastErrno() {
-        return $this->conn->errno;
+    public function errno() {
+        return $this->lastUsedConn->errno();
     }
 
     public function rs2array($sql)
@@ -220,19 +199,12 @@ class DBProxy
         return $ret[0];
     }
 
-    public function rs2foundrows()
-    {
+    public function rs2foundrows() {
         return $this->rs2firstvalue("SELECT FOUND_ROWS()");
     }
 
-    public function realEscapeString($string)
-    {
-        return $this->conn->real_escape_string($string);
-    }
-
-    public static function getQueryNum()
-    {
-        return self::$queryNum;
+    public function realEscapeString($string) {
+        return $this->lastUsedConn->realEscapeString($string);
     }
 
     public static function getInsertNum()
@@ -253,15 +225,6 @@ class DBProxy
     public static function getSelectNum()
     {
         return self::$stat['select'];
-    }
-
-    public static function getSqlLog()
-    {
-        return self::$sqlLog;
-    }
-
-    public static function getTimeSpan() {
-        return self::$timeSpan;
     }
 
     /**
@@ -332,13 +295,55 @@ class DBProxy
 
 }
 
+class DBMysqli {
 
+    private $mysqli;
 
+    function __construct($host, $username, $password, $dbname, $port = 3306) {
+        $this->_connect($host, $username, $password, $dbname, $port);
+    }
 
+    protected function _connect($host, $username, $password, $dbname, $port) {
+        $mysqli = new mysqli($host, $username, $password, $dbname, $port);
+        if (!$mysqli) {
+            trigger_error('connect db failed. error:'.$mysqli->errno);
+        }
+        $this->mysqli = $mysqli;
+        return $this->mysqli;
+    }
 
+    protected function close() {
+        $this->mysqli->close();
+    }
 
+    public function query($sql) {
+        $mysqli = $this->mysqli;
+        $ret = $mysqli->query($sql);
+        if ($this->mysqli->errno !== 0) {
+            Trace::fatal('query failed. errno:'.$mysqli->errno.' error:'.$mysqli->error, __FILE__, __LINE__);
+            trigger_error('query failed. errno:'.$mysqli->errno.' error:'.$mysqli->error);
+        }
+        return $ret;
+    }
 
+    public function realEscapeString($escapestr) {
+        return $this->mysqli->real_escape_string($escapestr);
+    }
 
+    public function error() {
+        return $this->mysqli->error;
+    }
 
+    public function errno() {
+        return $this->mysqli->errno;
+    }
 
+    public function affectedRows() {
+        return $this->mysqli->affected_rows;
+    }
 
+    public function insertID() {
+        return $this->mysqli->insert_id;
+    }
+
+}
