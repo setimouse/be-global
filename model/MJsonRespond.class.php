@@ -1,9 +1,9 @@
 <?php
-class MJsonRespond
-{
-	protected $result = array('status'=>null, 'msg'=>null, 'data'=>null);
+class MJsonRespond {
 
-	const SUCCESS = 0;
+    protected $result = array('status'=>null, 'msg'=>null, 'data'=>null);
+
+    const SUCCESS = 0;
     const FAIL = 1;
 
     /**
@@ -14,43 +14,47 @@ class MJsonRespond
      * @param unknown_type $data
      * @return MJsonRespond
      */
-	public static function respond($status, $msg = null, $data = null)
-	{
-	    $respond = new MJsonRespond($status, $msg, $data);
-		return $respond;
-	}
+    public static function respond($status, $msg = null, $data = null) {
+        $respond = new MJsonRespond($status, $msg, $data);
+        return $respond;
+    }
 
-	public function __construct($status, $msg, $data)
-	{
-		$this->status = $status;
-		$this->msg = $msg;
-		$this->data = $data;
-	}
+    public static function respondSuccess($data = null) {
+        return self::respond(self::SUCCESS, null, $data);
+    }
 
-	public function toJson()
-	{
-		return json_encode($this->result);
-	}
+    public static function respondFail($data = null) {
+        return self::respond(self::FAIL, null, $data);
+    }
 
-	public function __set($key, $value)
-	{
-		assert(array_key_exists($key, $this->result));
-		if ('status' === $key) {
-    	    $errorMessage = Config::configForKeyPath('error');
-    	    if (is_array($errorMessage) && key_exists($value, $errorMessage)) {
-    	    	$this->msg = $errorMessage[$value];
-    	    }
-		} elseif ('msg' === $key) {
-		    if (null === $value) {
-		        return ;
-		    }
-		}
-		$this->result[$key] = $value;
-	}
+    public function __construct($status, $msg, $data) {
+        $this->status = $status;
+        $this->msg = $msg;
+        $this->data = $data;
+    }
 
-	public function __get($key)
-	{
-		assert(array_key_exists($key, $this->result));
-		return $this->result[$key];
-	}
+    public function toJson() {
+        return json_encode($this->result);
+    }
+
+    public function __set($key, $value) {
+        assert(array_key_exists($key, $this->result));
+        if ('status' === $key) {
+            $errorMessage = Config::configForKeyPath('error');
+            if (is_array($errorMessage) && key_exists($value, $errorMessage)) {
+                $this->msg = $errorMessage[$value];
+            }
+        } elseif ('msg' === $key) {
+            if (null === $value) {
+                return ;
+            }
+        }
+        $this->result[$key] = $value;
+    }
+
+    public function __get($key) {
+        assert(array_key_exists($key, $this->result));
+        return $this->result[$key];
+    }
+
 }

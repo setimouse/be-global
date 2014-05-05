@@ -18,7 +18,7 @@ abstract class BaseDal {
      *
      * @param DBProxy $db
      */
-    protected static function getDBProxy($db = null) {
+    public static function getDBProxy($db = null) {
         if (is_null($db)) {
             $db = static::defaultDB();
         }

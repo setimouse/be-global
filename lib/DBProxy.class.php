@@ -204,7 +204,8 @@ class DBProxy {
     }
 
     public function realEscapeString($string) {
-        return $this->lastUsedConn->realEscapeString($string);
+        $conn = defaultNullValue($this->lastUsedConn, $this->getConnection('w'));
+        return $conn->realEscapeString($string);
     }
 
     public static function getInsertNum()

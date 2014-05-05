@@ -9,22 +9,7 @@
  */
 class MRuntime {
 
-    protected $runtime;
-    protected $stack;
-
-    /**
-     * @return MRuntime
-     */
-    public static function getInstance() {
-        $className = get_called_class();
-
-    	return SingletonFactory::getInstance($className);
-    }
-
-    function __construct() {
-        $this->runtime = Config::configForKeyPath('runtime');
-        $this->stack = array();
-    }
+    protected static $stack = array();
 
     /**
      * 获取runtime
@@ -32,27 +17,27 @@ class MRuntime {
      * @param string $runtimeKeyPath
      * @return string
      */
-    public function currentRuntime($runtimeKeyPath = 'global.runtime') {
-    	return Config::configForKeyPath($runtimeKeyPath);
+    public static function currentRuntime($runtimeKeyPath = 'runtime') {
+        return Config::configForKeyPath($runtimeKeyPath);
     }
 
-    public function setRuntime($newRuntime) {
+    public static function setRuntime($newRuntime) {
         Trace::debug('set runtime:'.$newRuntime, __FILE__, __LINE__);
-    	$currentRuntime = &Config::configRefForKeyPath('global.runtime');
-    	$currentRuntime = $newRuntime;
+        $currentRuntime = &Config::configRefForKeyPath('runtime');
+        $currentRuntime = $newRuntime;
     }
 
-    public function switchRuntime($newRuntime) {
+    public static function switchRuntime($newRuntime) {
         $currentRuntime = self::currentRuntime();
-        array_push($this->stack, $currentRuntime);
-        $this->setRuntime($newRuntime);
+        array_push(self::$stack, $currentRuntime);
+        self::setRuntime($newRuntime);
     }
 
     public function restoreRuntime() {
-        $lastRuntime = array_pop($this->stack);
+        $lastRuntime = array_pop(self::$stack);
         if (is_null($lastRuntime)) {
             return ;
         }
-        $this->setRuntime($lastRuntime);
+        self::setRuntime($lastRuntime);
     }
 }
