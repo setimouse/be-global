@@ -24,6 +24,8 @@ class MCurl {
 
     protected $retry;
 
+    protected static $error;
+
     function __construct($url, $method) {
         DAssert::assert(in_array($method, array(self::METHOD_GET, self::METHOD_POST)));
 
@@ -107,7 +109,7 @@ class MCurl {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $this->method);
             if($this->useProxy)
             {
-                $config=Config::runtimeConfigForKeyPath('proxy');
+                $config = Config::runtimeConfigForKeyPath('proxy');
                 if($config)
                 {
                     curl_setopt($ch, CURLOPT_PROXY,$config['host'].":".$config['port'] );
