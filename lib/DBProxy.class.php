@@ -282,7 +282,7 @@ class DBProxy {
     public function updateStatement($table, $updates, $where, $limit = 0x7fffffff) {
         $arrayUpdates = array();
         foreach ($updates as $upKey => $upValue) {
-            $arrayUpdates[] = "`".$this->realEscapeString($upKey)."`='".$dbProxy->realEscapeString($upValue)."'";
+            $arrayUpdates[] = "`".$this->realEscapeString($upKey)."`='".$this->realEscapeString($upValue)."'";
         }
         $strUpdates = join(', ', $arrayUpdates);
 
