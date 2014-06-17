@@ -4,19 +4,19 @@ class ZQMongoCollection {
 
     private $collection;
 
-    function __construct($mongoCollection) {
+    function __construct(MongoCollection $mongoCollection) {
         $this->collection = $mongoCollection;
     }
 
     /**
      * 工厂方法
      *
-     * @param ZQMongoDB $db
+     * @param ZQMongoDB $mongoDB
      * @param string $name
      * @return ZQMongoCollection
      */
-    public static function newInstance($db, $name) {
-        $mongoDB = $db->getMongoDB();
+    public static function collection(ZQMongoDB $mongoDB, $name) {
+        $mongoDB = $mongoDB->getMongoDB();
         $collection = new MongoCollection($mongoDB, $name);
         return new ZQMongoCollection($collection);
     }

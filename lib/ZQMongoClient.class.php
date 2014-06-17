@@ -3,7 +3,7 @@ class ZQMongoClient {
 
 	private $client = null;
 
-    function __construct($mongoClient) {
+    function __construct(MongoClient $mongoClient) {
         $this->client = $mongoClient;
     }
 
@@ -14,7 +14,7 @@ class ZQMongoClient {
      * @param array $options
      * @return ZQMongoClient
      */
-    public static function newInstance($server, $options = array('connect' => true)) {
+    public static function client($server, $options = array('connect' => true)) {
         $mongoClient = new MongoClient($server, $options);
         return new ZQMongoClient($mongoClient);
     }
