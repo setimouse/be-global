@@ -10,7 +10,7 @@ class NotificationCenter {
     protected static $hooks = array();
 
     public static function addObserver($notify, $callback) {
-        Dojet::assert(is_callable($callback), 'callback must be callable');
+        DAssert::assert(is_callable($callback), 'callback must be callable');
         if (!key_exists($notify, self::$hooks)) {
             self::$hooks[$notify] = array();
         }
