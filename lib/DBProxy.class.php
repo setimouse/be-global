@@ -249,6 +249,35 @@ class DBProxy {
     }
 
     /**
+     * make up insert values statement
+     *
+     * @param string $table
+     * @param array $fields
+     * @param array $valueSet
+     */
+    public function insertMultiStatement($table, $fields, $valueSet) {
+        $arrayFields = array();
+        $arrayValues = array();
+        foreach ($fields as $field) {
+            $arrayFields[] = '`'.$field.'`';
+        }
+
+        $arrValueSet = array();
+        foreach ($valueSet as $values) {
+            $arrayValues = array();
+            foreach ($values as $val) {
+                $arrayValues[] = "'".$val."'";
+                // $arrayValues[] = "'".$this->realEscapeString($val)."'";
+            }
+            $arrValueSet[] = '('.join(',',$arrayValues).')';
+        }
+        $strFields = join(',', $arrayFields);
+        $strValues = join(',', $arrValueSet);
+        $sql = "INSERT INTO $table($strFields) VALUES $strValues";
+        return $sql;
+    }
+
+    /**
      * make up insert or update statement
      *
      * @param string $table
@@ -300,7 +329,18 @@ class DBMysqli {
 
     private $mysqli;
 
+    private $host;
+    private $username;
+    private $password;
+    private $dbname;
+    private $port;
+
     function __construct($host, $username, $password, $dbname, $port = 3306) {
+        $this->host = $host;
+        $this->username = $username;
+        $this->password = $password;
+        $this->dbname = $dbname;
+        $this->port = $port;
         $this->_connect($host, $username, $password, $dbname, $port);
     }
 
@@ -318,13 +358,22 @@ class DBMysqli {
     }
 
     public function query($sql) {
-        $mysqli = $this->mysqli;
-        $ret = $mysqli->query($sql);
-        if ($this->mysqli->errno !== 0) {
-            Trace::fatal('query failed. errno:'.$mysqli->errno.' error:'.$mysqli->error, __FILE__, __LINE__);
-            trigger_error('query failed. errno:'.$mysqli->errno.' error:'.$mysqli->error);
+        $retry = 3;
+        while ($retry-- > 0) {
+            $ret = $this->mysqli->query($sql);
+            $errno = $this->mysqli->errno;
+            if ($errno === 0) {
+                return $ret;
+            }
+
+            if ($errno === 1062) {
+                return $ret;
+            }
+            $this->_connect($this->host, $this->username, $this->password, $this->dbname, $this->port);
         }
-        return $ret;
+
+        Trace::fatal('query failed. errno:'.$this->mysqli->errno.' error:'.$this->mysqli->error, __FILE__, __LINE__);
+        trigger_error('query failed. errno:'.$this->mysqli->errno.' error:'.$this->mysqli->error);
     }
 
     public function realEscapeString($escapestr) {
