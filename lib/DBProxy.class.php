@@ -169,7 +169,8 @@ class DBProxy {
         if (false === $rs) {
             return false;
         }
-        $ret = $rs->fetch_assoc($rs);
+
+        $ret = $rs->fetch_assoc();
         if (false === $ret) {
             return null;
         }
@@ -366,9 +367,10 @@ class DBMysqli {
                 return $ret;
             }
 
-            if ($errno === 1062) {
+            if (in_array($errno, array(1062))) {
                 return $ret;
             }
+
             $this->_connect($this->host, $this->username, $this->password, $this->dbname, $this->port);
         }
 

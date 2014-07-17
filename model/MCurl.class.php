@@ -26,6 +26,8 @@ class MCurl {
 
     protected static $error;
 
+    protected $arrOptions;
+
     function __construct($url, $method) {
         DAssert::assert(in_array($method, array(self::METHOD_GET, self::METHOD_POST)));
 
@@ -40,6 +42,8 @@ class MCurl {
         $this->timeout = 30;
 
         $this->retry = 3;
+
+        $this->arrOptions = array();
     }
 
     public static function curlGetRequest($url) {
@@ -73,6 +77,20 @@ class MCurl {
     public function setHeaders($arrRequestHeaders) {
         DAssert::assert(is_array($arrRequestHeaders), 'request header must be array');
         $this->headers = $arrRequestHeaders;
+    }
+
+    public function setOption($key, $value) {
+        $this->arrOptions[$key] = $value;
+    }
+
+    public function removeOption($key) {
+        if (isset($this->arrOptions[$key])) {
+            unset($this->arrOptions[$key]);
+        }
+    }
+
+    public function removeAllOptions() {
+        $this->arrOptions = array();
     }
 
     public function sendRequest() {
@@ -118,6 +136,10 @@ class MCurl {
                     }
                 }
             }
+
+            //  apply user options
+            curl_setopt_array($ch, $this->arrOptions);
+
             $response = curl_exec($ch);
 
             if (false === $response) {

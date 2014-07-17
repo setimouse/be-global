@@ -47,6 +47,12 @@ abstract class BaseDal {
         return self::result($ret, $dbProxy);
     }
 
+    protected static function rs2rowline($sql, $db = null) {
+        $dbProxy = static::getDBProxy($db);
+        $ret = $dbProxy->rs2rowline($sql);
+        return self::result($ret, $dbProxy);
+    }
+
     protected static function doInsert($table, $fields_values, $db = null) {
         $dbProxy = static::getDBProxy($db);
         $sql = $dbProxy->insertStatement($table, $fields_values);
