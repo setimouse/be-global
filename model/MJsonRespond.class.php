@@ -19,12 +19,27 @@ class MJsonRespond {
         return $respond;
     }
 
-    public static function respondSuccess($data = null) {
-        return self::respond(self::SUCCESS, null, $data);
+    public static function respondFromJson($json) {
+        $array = json_decode($json, true);
+        if (!$array) {
+            return false;
+        }
+
+        if (!key_exists('status', $array) ||
+            !key_exists('msg', $array) ||
+            !key_exists('data', $array)) {
+            return false;
+        }
+
+        return MJsonRespond::respond($array['status'], $array['msg'], $array['data']);
     }
 
-    public static function respondFail($data = null) {
-        return self::respond(self::FAIL, null, $data);
+    public static function respondSuccess($msg = null, $data = null) {
+        return self::respond(self::SUCCESS, $msg, $data);
+    }
+
+    public static function respondFail($msg = null, $data = null) {
+        return self::respond(self::FAIL, $msg, $data);
     }
 
     public function __construct($status, $msg, $data) {
