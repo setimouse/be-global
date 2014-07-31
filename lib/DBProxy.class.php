@@ -27,7 +27,7 @@ class DBProxy {
         $var_conn = 'conn_'.$rw;
         $conn = &$this->$var_conn;
 
-        if (!is_resource($conn)) {
+        if (!is_object($conn)) {
             $config = Config::configForKeyPath($rw, $this->dbConfig);
             $conn = $this->connect($config);
         }
@@ -104,11 +104,11 @@ class DBProxy {
     }
 
     public function affectedRows() {
-        return $this->lastUsedConn->affectedRows();
+        return $this->getConnection('w')->affectedRows();
     }
 
     public function insertID() {
-        return $this->lastUsedConn->insert_id();
+        return $this->getConnection('w')->insertID();
     }
 
     public function error() {

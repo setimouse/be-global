@@ -9,6 +9,8 @@
  */
 abstract class BaseDal {
 
+    protected static $dbpool = array();
+
     protected static function defaultDB() {
         return null;
     }
@@ -25,7 +27,13 @@ abstract class BaseDal {
         DAssert::assert(!is_null($db), 'db should not be null!');
 
         $dbConfig = Config::runtimeConfigForKeyPath('database.$.'.$db);
-        $dbProxy = new DBProxy($dbConfig);
+
+        $key = crc32(serialize($dbConfig));
+        if (!array_key_exists($key, self::$dbpool)) {
+            self::$dbpool[$key] = new DBProxy($dbConfig);
+        }
+        $dbProxy = self::$dbpool[$key];
+
         return $dbProxy;
     }
 
@@ -63,6 +71,12 @@ abstract class BaseDal {
         $dbProxy = static::getDBProxy($db);
         $sql = $dbProxy->insertStatement($table, $fields_values);
         $ret = $dbProxy->doInsert($sql);
+        return self::result($ret, $dbProxy);
+    }
+
+    protected static function insertID($db = null) {
+        $dbProxy = static::getDBProxy($db);
+        $ret = $dbProxy->insertID();
         return self::result($ret, $dbProxy);
     }
 
