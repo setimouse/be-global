@@ -67,6 +67,19 @@ abstract class BaseDal {
         return self::result($ret, $dbProxy);
     }
 
+    protected static function doDelete($sql, $db = null) {
+        $dbProxy = static::getDBProxy($db);
+        $ret = $dbProxy->doDelete($sql);
+        return self::result($ret, $dbProxy);
+    }
+
+    protected static function doUpdate($table, $updates, $where, $limit = 0x7fffffff, $db = null) {
+        $dbProxy = static::getDBProxy($db);
+        $sql = $dbProxy->updateStatement($table, $updates, $where, $limit);
+        $ret = $dbProxy->doUpdate($sql);
+        return self::result($ret, $dbProxy);
+    }
+
     protected static function doInsert($table, $fields_values, $db = null) {
         $dbProxy = static::getDBProxy($db);
         $sql = $dbProxy->insertStatement($table, $fields_values);
