@@ -298,7 +298,7 @@ class DBProxy {
 
         $arrayUpdates = array();
         foreach ($updates as $upKey => $upValue) {
-            $arrayUpdates[] = "`".$this->realEscapeString($upKey)."`='".DBProxy::realEscapeString($upValue)."'";
+            $arrayUpdates[] = $this->updateOption($upKey, $upValue);
         }
         $strUpdates = join(', ', $arrayUpdates);
 
@@ -312,7 +312,7 @@ class DBProxy {
     public function updateStatement($table, $updates, $where, $limit = 0x7fffffff) {
         $arrayUpdates = array();
         foreach ($updates as $upKey => $upValue) {
-            $arrayUpdates[] = "`".$this->realEscapeString($upKey)."`='".$this->realEscapeString($upValue)."'";
+            $arrayUpdates[] = $this->updateOption($upKey, $upValue);
         }
         $strUpdates = join(', ', $arrayUpdates);
 
@@ -324,6 +324,22 @@ class DBProxy {
         return $sql;
     }
 
+    private function updateOption($upKey, $upValue) {
+        $statement = null;
+
+        $realUpKey = $this->realEscapeString($upKey);
+        if (is_array($upValue)) {
+            if (array_key_exists('inc', $upValue)) {
+                $statement = "`$realUpKey`=`$realUpKey`+1";
+            }
+        } else {
+            $statement = "`".$realUpKey."`='".$this->realEscapeString($upValue)."'";
+        }
+
+        DAssert::assert($statement !== null,
+            'illegal update option, key='.$upKey.' value='.$upValue);
+        return $statement;
+    }
 }
 
 class DBMysqli {

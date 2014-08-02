@@ -83,6 +83,7 @@ abstract class BaseDal {
     protected static function doInsertUpdate($table, $arrIns, $arrUpd, $db = null) {
         $dbProxy = static::getDBProxy($db);
         $sql = $dbProxy->insertOrUpdateStatement($table, $arrIns, $arrUpd);
+        Trace::debug($sql);
         $ret = $dbProxy->doInsert($sql);
         return self::result($ret, $dbProxy);
     }
