@@ -155,7 +155,7 @@ class DBProxy {
         }
         $ret = array();
         if ($rs) {
-            while ($row = $rs->fetch_assoc($rs)) {
+            while ($row = $rs->fetch_assoc()) {
                 $resultKey = $row[$key];
                 $ret[$resultKey] = $row;
             }
