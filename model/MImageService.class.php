@@ -19,13 +19,26 @@ abstract class MImageService {
         return $ret;
     }
 
-    public static function getImagePath($hash) {
-        $path = static::imageRoot();
-        $path.= substr($hash, 0, 2);
+    protected static function imageHashPath($hash) {
+        $path = substr($hash, 0, 2);
         $filepath = $path.'/'.$hash;
         return $filepath;
     }
 
+    public static function getImagePath($hash) {
+        $path = static::imageRoot();
+        $filepath = $path.self::imageHashPath($hash);
+        return $filepath;
+    }
+
+    public static function getImageUrl($hash) {
+        $urlprefix = static::imageUrlPrefix();
+        $url = $urlprefix.self::imageHashPath($hash);
+        return $url;
+    }
+
     abstract protected static function imageRoot();
+
+    abstract protected static function imageUrlPrefix();
 
 }
