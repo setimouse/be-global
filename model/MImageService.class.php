@@ -9,21 +9,6 @@
  */
 abstract class MImageService {
 
-    public static function fetchImage($imgUrl) {
-        println('fetching image:'.$imgUrl);
-        $curl = MCurl::curlGetRequest($imgUrl);
-        $curl->setUseProxy(true);
-        $imageData = $curl->sendRequest();
-
-        $hash = md5($imageData);
-        $filepath = self::getImagePath($hash);
-        $ret = self::writeImage($filepath, $imageData);
-        if (!$ret) {
-            throw new Exception('save image fail', 101);
-        }
-        return $hash;
-    }
-
     public static function writeImage($filepath, $imageData) {
         $path = dirname($filepath);
         if (!file_exists($path)) {
