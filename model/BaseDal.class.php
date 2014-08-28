@@ -101,4 +101,19 @@ abstract class BaseDal {
         return self::result($ret, $dbProxy);
     }
 
+    public static function beginTransaction($db = null) {
+        $dbProxy = static::getDBProxy($db);
+        return $dbProxy->beginTransaction();
+    }
+
+    public static function commit($db = null) {
+        $dbProxy = static::getDBProxy($db);
+        return $dbProxy->commit();
+    }
+
+    public static function rollback($db = null) {
+        $dbProxy = static::getDBProxy($db);
+        return $dbProxy->rollback();
+    }
+
 }
