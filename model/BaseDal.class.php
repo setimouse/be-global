@@ -55,6 +55,12 @@ abstract class BaseDal {
         return self::result($ret, $dbProxy);
     }
 
+    protected static function rs2keyarray($sql, $key, $db = null) {
+        $dbProxy = static::getDBProxy($db);
+        $ret = $dbProxy->rs2keyarray($sql, $key);
+        return self::result($ret, $dbProxy);
+    }
+
     protected static function rs2rowline($sql, $db = null) {
         $dbProxy = static::getDBProxy($db);
         $ret = $dbProxy->rs2rowline($sql);

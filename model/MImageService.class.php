@@ -21,19 +21,24 @@ abstract class MImageService {
 
     protected static function imageHashPath($hash) {
         $path = substr($hash, 0, 2);
-        $filepath = $path.'/'.$hash;
-        return $filepath;
+        return $path;
     }
 
-    public static function getImagePath($hash) {
+    public static function getImagePath($hash, $create = false) {
         $path = static::imageRoot();
-        $filepath = $path.self::imageHashPath($hash);
+        $path.= self::imageHashPath($hash);
+        if (!file_exists($path) && $create) {
+            mkdir($path, true);
+            chmod($path, 0755);
+        }
+        $filepath = $path.'/'.$hash;
         return $filepath;
     }
 
     public static function getImageUrl($hash) {
         $urlprefix = static::imageUrlPrefix();
         $url = $urlprefix.self::imageHashPath($hash);
+        $url.= '/'.$hash;
         return $url;
     }
 
