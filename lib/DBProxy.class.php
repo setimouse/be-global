@@ -391,6 +391,7 @@ class DBMysqli {
         }
 
         Trace::fatal('query failed. errno:'.$this->mysqli->errno.' error:'.$this->mysqli->error, __FILE__, __LINE__);
+        Trace::fatal('sql: '.$sql, __FILE__, __LINE__);
         trigger_error('query failed. errno:'.$this->mysqli->errno.' error:'.$this->mysqli->error);
     }
 

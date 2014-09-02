@@ -20,7 +20,7 @@ abstract class BaseDal {
      *
      * @param DBProxy $db
      */
-    public static function getDBProxy($db = null) {
+    protected static function getDBProxy($db = null) {
         if (is_null($db)) {
             $db = static::defaultDB();
         }
@@ -37,7 +37,7 @@ abstract class BaseDal {
         return $dbProxy;
     }
 
-    public static function getInsertId($db = null) {
+    protected static function getInsertId($db = null) {
         $dbProxy = static::getDBProxy($db);
         return $dbProxy->insertID();
     }
@@ -71,6 +71,13 @@ abstract class BaseDal {
         $dbProxy = static::getDBProxy($db);
         $ret = $dbProxy->rs2firstvalue($sql);
         return self::result($ret, $dbProxy);
+    }
+
+    protected static function fetchOne($table, $where, $db = null) {
+        $sql = "SELECT *
+                FROM $table
+                WHERE $where";
+        return self::rs2rowline($sql, $db);
     }
 
     protected static function doDelete($sql, $db = null) {
