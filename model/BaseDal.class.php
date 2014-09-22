@@ -52,45 +52,45 @@ abstract class BaseDal {
     protected static function rs2array($sql, $db = null) {
         $dbProxy = static::getDBProxy($db);
         $ret = $dbProxy->rs2array($sql);
-        return self::result($ret, $dbProxy);
+        return static::result($ret, $dbProxy);
     }
 
     protected static function rs2keyarray($sql, $key, $db = null) {
         $dbProxy = static::getDBProxy($db);
         $ret = $dbProxy->rs2keyarray($sql, $key);
-        return self::result($ret, $dbProxy);
+        return static::result($ret, $dbProxy);
     }
 
     protected static function rs2rowline($sql, $db = null) {
         $dbProxy = static::getDBProxy($db);
         $ret = $dbProxy->rs2rowline($sql);
-        return self::result($ret, $dbProxy);
+        return static::result($ret, $dbProxy);
     }
 
     protected static function rs2firstvalue($sql, $db = null) {
         $dbProxy = static::getDBProxy($db);
         $ret = $dbProxy->rs2firstvalue($sql);
-        return self::result($ret, $dbProxy);
+        return static::result($ret, $dbProxy);
     }
 
     protected static function fetchOne($table, $where, $db = null) {
         $sql = "SELECT *
                 FROM $table
                 WHERE $where";
-        return self::rs2rowline($sql, $db);
+        return static::rs2rowline($sql, $db);
     }
 
     protected static function doDelete($sql, $db = null) {
         $dbProxy = static::getDBProxy($db);
         $ret = $dbProxy->doDelete($sql);
-        return self::result($ret, $dbProxy);
+        return static::result($ret, $dbProxy);
     }
 
     protected static function doUpdate($table, $updates, $where, $limit = 0x7fffffff, $db = null) {
         $dbProxy = static::getDBProxy($db);
         $sql = $dbProxy->updateStatement($table, $updates, $where, $limit);
         $ret = $dbProxy->doUpdate($sql);
-        return self::result($ret, $dbProxy);
+        return static::result($ret, $dbProxy);
     }
 
     protected static function doInsertUpdate($table, $arrIns, $arrUpd, $db = null) {
@@ -98,20 +98,20 @@ abstract class BaseDal {
         $sql = $dbProxy->insertOrUpdateStatement($table, $arrIns, $arrUpd);
         Trace::debug($sql);
         $ret = $dbProxy->doInsert($sql);
-        return self::result($ret, $dbProxy);
+        return static::result($ret, $dbProxy);
     }
 
     protected static function doInsert($table, $fields_values, $db = null) {
         $dbProxy = static::getDBProxy($db);
         $sql = $dbProxy->insertStatement($table, $fields_values);
         $ret = $dbProxy->doInsert($sql);
-        return self::result($ret, $dbProxy);
+        return static::result($ret, $dbProxy);
     }
 
-    protected static function insertID($db = null) {
+    public static function insertID($db = null) {
         $dbProxy = static::getDBProxy($db);
         $ret = $dbProxy->insertID();
-        return self::result($ret, $dbProxy);
+        return static::result($ret, $dbProxy);
     }
 
     public static function beginTransaction($db = null) {
