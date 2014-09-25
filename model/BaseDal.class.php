@@ -129,4 +129,10 @@ abstract class BaseDal {
         return $dbProxy->rollback();
     }
 
+    protected static function realEscapeString(&$str, $db = null) {
+        $dbProxy = static::getDBProxy($db);
+        $str = $dbProxy->realEscapeString($str);
+        return $str;
+    }
+
 }
