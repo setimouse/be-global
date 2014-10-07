@@ -37,11 +37,13 @@ abstract class SmartyBaseAction extends XBaseAction {
      * @param string $template
      */
     protected function display($template) {
+        $template = TEMPLATE.$template;
         foreach ($this->arrHeader as $key => $value) {
             header($key.":".$value);
         }
 
         self::getView()->display($template);
     }
+
 }
 
