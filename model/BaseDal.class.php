@@ -37,7 +37,7 @@ abstract class BaseDal {
         return $dbProxy;
     }
 
-    protected static function getInsertId($db = null) {
+    public static function getInsertId($db = null) {
         $dbProxy = static::getDBProxy($db);
         return $dbProxy->insertID();
     }
