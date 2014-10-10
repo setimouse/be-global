@@ -61,23 +61,23 @@ abstract class BaseDal {
         return static::result($ret, $dbProxy);
     }
 
-    protected static function rs2rowline($sql, $db = null) {
+    protected static function rs2rowline($sql, $db = null, $rw = 'r') {
         $dbProxy = static::getDBProxy($db);
-        $ret = $dbProxy->rs2rowline($sql);
+        $ret = $dbProxy->rs2rowline($sql, $rw);
         return static::result($ret, $dbProxy);
     }
 
-    protected static function rs2firstvalue($sql, $db = null) {
+    protected static function rs2firstvalue($sql, $db = null, $rw = 'r') {
         $dbProxy = static::getDBProxy($db);
-        $ret = $dbProxy->rs2firstvalue($sql);
+        $ret = $dbProxy->rs2firstvalue($sql, $rw);
         return static::result($ret, $dbProxy);
     }
 
-    protected static function fetchOne($table, $where, $db = null) {
+    protected static function fetchOne($table, $where, $db = null, $rw = 'r') {
         $sql = "SELECT *
                 FROM $table
                 WHERE $where";
-        return static::rs2rowline($sql, $db);
+        return static::rs2rowline($sql, $db, $rw);
     }
 
     protected static function foundrows($db = null) {

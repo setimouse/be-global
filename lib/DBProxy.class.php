@@ -69,28 +69,36 @@ class DBProxy {
         $this->getConnection('w')->query('ROLLBACK');
     }
 
-    public function doInsert($sql)
+    protected function doQuery($sql, $rw) {
+        if ('r' === $rw) {
+            return $this->doRead($sql);
+        } else {
+            return $this->doWrite($sql);
+        }
+    }
+
+    public function doInsert($sql, $rw = 'w')
     {
         self::$stat['insert']++;
-        return $this->doWrite($sql);
+        return $this->doQuery($sql, $rw);
     }
 
-    public function doUpdate($sql)
+    public function doUpdate($sql, $rw = 'w')
     {
         self::$stat['update']++;
-        return $this->doWrite($sql);
+        return $this->doQuery($sql, $rw);
     }
 
-    public function doDelete($sql)
+    public function doDelete($sql, $rw = 'w')
     {
         self::$stat['delete']++;
-        return $this->doWrite($sql);
+        return $this->doQuery($sql, $rw);
     }
 
-    public function doSelect($sql)
+    public function doSelect($sql, $rw = 'r')
     {
         self::$stat['select']++;
-        return $this->doRead($sql);
+        return $this->doQuery($sql, $rw);
     }
 
     public function doRead($sql) {
@@ -119,9 +127,9 @@ class DBProxy {
         return $this->lastUsedConn->errno();
     }
 
-    public function rs2array($sql)
+    public function rs2array($sql, $rw = 'r')
     {
-        $rs = $this->doSelect($sql);
+        $rs = $this->doSelect($sql, $rw);
         if (false === $rs) {
             return false;
         }
@@ -134,8 +142,8 @@ class DBProxy {
         return  $ret;
     }
 
-    public function rs2oneColumnArray($sql) {
-        $rs = $this->doSelect($sql);
+    public function rs2oneColumnArray($sql, $rw = 'r') {
+        $rs = $this->doSelect($sql, $rw);
         if (false === $rs) {
             return false;
         }
@@ -148,8 +156,8 @@ class DBProxy {
         return  $ret;
     }
 
-    public function rs2keyarray($sql, $key) {
-        $rs = $this->doSelect($sql);
+    public function rs2keyarray($sql, $key, $rw = 'r') {
+        $rs = $this->doSelect($sql, $rw);
         if (false === $rs) {
             return false;
         }
@@ -163,9 +171,9 @@ class DBProxy {
         return  $ret;
     }
 
-    public function rs2rowline($sql)
+    public function rs2rowline($sql, $rw = 'r')
     {
-        $rs = $this->doSelect($sql);
+        $rs = $this->doSelect($sql, $rw);
         if (false === $rs) {
             return false;
         }
@@ -177,15 +185,15 @@ class DBProxy {
         return  $ret;
     }
 
-    public function rs2rowcount($sql)
+    public function rs2rowcount($sql, $rw = 'r')
     {
-        $ret = $this->rs2firstvalue($sql);
+        $ret = $this->rs2firstvalue($sql, $rw);
         return $ret;
     }
 
-    public function rs2firstvalue($sql)
+    public function rs2firstvalue($sql, $rw = 'r')
     {
-        $row = $this->rs2rowline($sql);
+        $row = $this->rs2rowline($sql, $rw);
         if (false === $row) {
             return false;
         } elseif (null === $row) {
@@ -200,8 +208,8 @@ class DBProxy {
         return $ret[0];
     }
 
-    public function rs2foundrows() {
-        return $this->rs2firstvalue("SELECT FOUND_ROWS()");
+    public function rs2foundrows($rw = 'r') {
+        return $this->rs2firstvalue("SELECT FOUND_ROWS()", $rw);
     }
 
     public function realEscapeString($string) {
