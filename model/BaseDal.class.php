@@ -80,6 +80,11 @@ abstract class BaseDal {
         return static::rs2rowline($sql, $db);
     }
 
+    protected static function foundrows($db = null) {
+        $sql = "SELECT FOUND_ROWS()";
+        return static::rs2firstvalue($sql, $db);
+    }
+
     protected static function doDelete($sql, $db = null) {
         $dbProxy = static::getDBProxy($db);
         $ret = $dbProxy->doDelete($sql);
