@@ -30,10 +30,11 @@ class NotificationCenter {
         }
 
         $args = func_get_args();
-		array_shift($args);
+        array_shift($args);
 
         foreach (self::$hooks[$notify] as $callback) {
             call_user_func_array($callback, $args);
         }
     }
+
 }

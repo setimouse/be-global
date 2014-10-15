@@ -119,6 +119,12 @@ abstract class BaseDal {
         return static::result($ret, $dbProxy);
     }
 
+    public static function affectedRows($db = null) {
+        $dbProxy = static::getDBProxy($db);
+        $ret = $dbProxy->affectedRows();
+        return static::result($ret, $dbProxy);
+    }
+
     public static function beginTransaction($db = null) {
         $dbProxy = static::getDBProxy($db);
         return $dbProxy->beginTransaction();
