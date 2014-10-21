@@ -23,6 +23,7 @@ class MCurl {
     protected $timeout;
 
     protected $retry;
+    protected $retrySleep;
 
     protected static $error;
 
@@ -42,6 +43,7 @@ class MCurl {
         $this->timeout = 30;
 
         $this->retry = 3;
+        $this->retrySleep = 0;
 
         $this->arrOptions = array();
     }
@@ -81,6 +83,14 @@ class MCurl {
 
     public function setOption($key, $value) {
         $this->arrOptions[$key] = $value;
+    }
+
+    public function setRetry($retry) {
+        $this->retry = $retry;
+    }
+
+    public function setRetrySleep($retrySleep) {
+        $this->retrySleep = $retrySleep;
     }
 
     public function removeOption($key) {
@@ -130,6 +140,7 @@ class MCurl {
                 $config = Config::runtimeConfigForKeyPath('proxy');
                 if($config)
                 {
+                    Trace::debug('use proxy: '.$config['username'].'@'.$config['host'].':'.$config['port']);
                     curl_setopt($ch, CURLOPT_PROXY,$config['host'].":".$config['port'] );
                     if (isset($config['username']) && isset($config['password'])) {
                         curl_setopt($ch, CURLOPT_PROXYUSERPWD, $config['username'].':'.$config['password']);
@@ -147,6 +158,7 @@ class MCurl {
                 Trace::debug('curl error: '.curl_error($ch));
                 Trace::verbose('curl error: '.curl_error($ch));
                 Trace::debug('retry: '.$retry);
+                sleep($this->retrySleep);
                 $retry--;
             } else {
                 self::$error = MResult::result(MResult::SUCCESS);
