@@ -29,12 +29,12 @@ abstract class XBaseAction extends BaseAction {
     }
 
     protected function displayJsonSuccess($data = null) {
-        $jsonRespond = MJsonRespond::respondSuccess($data);
+        $jsonRespond = MJsonRespond::respondSuccess('success', $data);
         $this->displayJson($jsonRespond);
     }
 
     protected function displayJsonFail($data = null) {
-        $jsonRespond = MJsonRespond::respondFail($data);
+        $jsonRespond = MJsonRespond::respondFail('fail', $data);
         $this->displayJson($jsonRespond);
     }
 
