@@ -338,7 +338,8 @@ class DBProxy {
         $realUpKey = $this->realEscapeString($upKey);
         if (is_array($upValue)) {
             if (array_key_exists('inc', $upValue)) {
-                $statement = "`$realUpKey`=`$realUpKey`+1";
+                $inc = $upValue['inc'];
+                $statement = "`$realUpKey`=`$realUpKey`+$inc";
             }
         } else {
             $statement = "`".$realUpKey."`='".$this->realEscapeString($upValue)."'";
