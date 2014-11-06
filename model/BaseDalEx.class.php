@@ -16,4 +16,8 @@ abstract class BaseDalEx extends BaseDal {
         return $ret;
     }
 
+    public static function totalCount() {
+        return parent::foundrows();
+    }
+
 }
