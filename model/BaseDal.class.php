@@ -61,6 +61,12 @@ abstract class BaseDal {
         return static::result($ret, $dbProxy);
     }
 
+    protected static function rs2grouparray($sql, $groupkey, $rowkey = null, $db = null) {
+        $dbProxy = static::getDBProxy($db);
+        $ret = $dbProxy->rs2grouparray($sql, $groupkey, $rowkey);
+        return static::result($ret, $dbProxy);
+    }
+
     protected static function rs2rowline($sql, $db = null, $rw = 'r') {
         $dbProxy = static::getDBProxy($db);
         $ret = $dbProxy->rs2rowline($sql, $rw);

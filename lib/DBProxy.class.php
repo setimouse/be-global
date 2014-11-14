@@ -171,15 +171,19 @@ class DBProxy {
         return  $ret;
     }
 
-    public function rs2grouparray($sql, $key, $rw = 'r') {
+    public function rs2grouparray($sql, $groupkey, $rowkey = null, $rw = 'r') {
         $rs = $this->doSelect($sql, $rw);
         if (false === $rs) {
             return false;
         }
         $ret = array();
         while ($row = $rs->fetch_assoc()) {
-            $resultKey = $row[$key];
-            $ret[$resultKey][] = $row;
+            $resultKey = $row[$groupkey];
+            if ($rowkey) {
+                $ret[$resultKey][$row[$rowkey]] = $row;
+            } else {
+                $ret[$resultKey][] = $row;
+            }
         }
         return $ret;
     }
