@@ -85,6 +85,19 @@ abstract class BaseDal {
         return static::result($ret, $dbProxy);
     }
 
+    protected static function rs2inmulti($arrIds, $table, $key) {
+        if (empty($arrIds)) {
+            return array();
+        }
+        DAssert::assertNumericArray($arrIds);
+        $strIds = join(',', $arrIds);
+        $sql = "SELECT *
+                FROM $table
+                WHERE $key IN ($strIds)
+                ORDER BY $strIds";
+        return static::rs2keyarray($sql, $key);
+    }
+
     protected static function fetchOne($table, $where, $db = null, $rw = 'r') {
         $sql = "SELECT *
                 FROM $table
