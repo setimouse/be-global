@@ -42,15 +42,5 @@ abstract class XBaseAction extends BaseAction {
         printa($this->tplData);
     }
 
-    protected function displayResult($title, $msg, $backurl) {
-        $expire = time() + 600;
-        $path = '/';
-        MCookie::setCookie('rlttitle', $title, $expire, $path);
-        MCookie::setCookie('rltmsg', $msg, $expire, $path);
-        MCookie::setCookie('rltback', $backurl, $expire, $path);
-
-        redirect('/result');
-    }
-
 }
 
