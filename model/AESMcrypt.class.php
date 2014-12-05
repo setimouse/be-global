@@ -9,9 +9,9 @@
  */
 class AESMcrypt {
 
-    public $iv = null;
-    public $key = null;
-    public $bit = 128;
+    private $iv = null;
+    private $key = null;
+    private $bit = 128;
     private $cipher;
 
     public function __construct($bit, $key, $iv, $mode) {
