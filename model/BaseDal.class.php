@@ -94,7 +94,7 @@ abstract class BaseDal {
         $sql = "SELECT *
                 FROM $table
                 WHERE $key IN ($strIds)
-                ORDER BY $strIds";
+                ORDER BY FIELD ($key, $strIds)";
         return static::rs2keyarray($sql, $key);
     }
 
