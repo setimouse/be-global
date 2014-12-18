@@ -85,6 +85,12 @@ abstract class BaseDal {
         return static::result($ret, $dbProxy);
     }
 
+    protected static function rs2oneColumnArray($sql, $db = null, $rw = 'r') {
+        $dbProxy = static::getDBProxy($db);
+        $ret = $dbProxy->rs2oneColumnArray($sql, $rw);
+        return static::result($ret, $dbProxy);
+    }
+
     protected static function rs2inmulti($arrIds, $table, $key) {
         if (empty($arrIds)) {
             return array();
