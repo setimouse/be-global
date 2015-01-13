@@ -15,7 +15,8 @@ class MJsonRespond {
      * @return MJsonRespond
      */
     public static function respond($status, $msg = null, $data = null) {
-        $respond = new MJsonRespond($status, $msg, $data);
+        $class = get_called_class();
+        $respond = new $class($status, $msg, $data);
         return $respond;
     }
 
@@ -31,7 +32,7 @@ class MJsonRespond {
             return false;
         }
 
-        return MJsonRespond::respond($array['status'], $array['msg'], $array['data']);
+        return static::respond($array['status'], $array['msg'], $array['data']);
     }
 
     public static function respondSuccess($msg = null, $data = null) {
