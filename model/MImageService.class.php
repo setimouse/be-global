@@ -42,6 +42,23 @@ abstract class MImageService {
         return $url;
     }
 
+    public static function writeThumb($imageData, $hash, $width, $height) {
+        $filepath = self::getThumbPath($hash, $width, $height);
+        return self::writeImage($filepath, $imageData);
+    }
+
+    public static function getThumbPath($hash, $width, $height) {
+        $thumbRoot = Config::runtimeConfigForKeyPath('image.thumb_root');
+        $filepath = sprintf("%s%dx%d/%s/%s", $thumbRoot, $width, $height, self::imageHashPath($hash), $hash);
+        return $filepath;
+    }
+
+    public static function getThumbUrl($hash, $width, $height) {
+        $thumbPrefix = Config::runtimeConfigForKeyPath('image.thumb_urlprefix');
+        $url = sprintf("%s%dx%d/%s/%s", $thumbPrefix, $width, $height, self::imageHashPath($hash), $hash);
+        return $url;
+    }
+
     abstract protected static function imageRoot();
 
     abstract protected static function imageUrlPrefix();
