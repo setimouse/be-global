@@ -1,4 +1,5 @@
 <?php
-$__c = &$GLOBALS['config']['global'];
+$__c = &Config::configRefForKeyPath('global');
+
 
 unset($__c);
