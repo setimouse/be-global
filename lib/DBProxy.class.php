@@ -16,6 +16,8 @@ class DBProxy {
 
     private $lastUsedConn;
 
+    private static $dbAdapter;
+
     function __construct($dbConfig) {
         $this->dbConfig = $dbConfig;
         $this->conn_r = $this->conn_w = null;
@@ -37,6 +39,17 @@ class DBProxy {
         return $conn;
     }
 
+    public static function setDBAdapter(DBAdapter $dbAdapter) {
+        self::$dbAdapter = $dbAdapter;
+    }
+
+    public static function getDBAdapter() {
+        if (is_null(self::$dbAdapter)) {
+            self::$dbAdapter = ConfigHelper::getDBAdapter();
+        }
+        return self::$dbAdapter;
+    }
+
     private function connect($config) {
         srand(time());
         $dbIndex = rand(0, count($config['hosts']) - 1);
@@ -46,11 +59,17 @@ class DBProxy {
         $password = $config['password'];
         $dbname = $config['dbname'];
 
-        $connection = new DBMysqli($host, $username, $password, $dbname, $port);
+        $dbAdapter = self::getDBAdapter();
+        $dbAdapter->host = $host;
+        $dbAdapter->port = $port;
+        $dbAdapter->username = $username;
+        $dbAdapter->password = $password;
+        $dbAdapter->dbname = $dbname;
+        $dbAdapter->connect();
 
-        $connection->query('SET NAMES "UTF8"');
+        $dbAdapter->query('SET NAMES "UTF8"');
 
-        return $connection;
+        return $dbAdapter;
     }
 
     public function beginTransaction() {
@@ -368,43 +387,37 @@ class DBProxy {
     }
 }
 
-class DBMysqli {
+class DBMysqli extends DBAdapter {
 
     private $mysqli;
 
-    private $host;
-    private $username;
-    private $password;
-    private $dbname;
-    private $port;
+    // function __construct($host, $username, $password, $dbname, $port = 3306) {
+    //     $this->host = $host;
+    //     $this->username = $username;
+    //     $this->password = $password;
+    //     $this->dbname = $dbname;
+    //     $this->port = $port;
+    //     $this->connect();
+    // }
 
-    function __construct($host, $username, $password, $dbname, $port = 3306) {
-        $this->host = $host;
-        $this->username = $username;
-        $this->password = $password;
-        $this->dbname = $dbname;
-        $this->port = $port;
-        $this->_connect($host, $username, $password, $dbname, $port);
-    }
-
-    protected function _connect($host, $username, $password, $dbname, $port) {
-        $mysqli = new mysqli($host, $username, $password, $dbname, $port);
+    public function connect() {
+        $mysqli = new mysqli($this->host, $this->username, $this->password, $this->dbname, $this->port);
         if (!$mysqli) {
             trigger_error('connect db failed. error:'.$mysqli->errno);
         }
-        $this->mysqli = $mysqli;
-        return $this->mysqli;
+        $this->db = $mysqli;
+        return $this->db;
     }
 
-    protected function close() {
-        $this->mysqli->close();
+    public function close() {
+        $this->db->close();
     }
 
     public function query($sql) {
         $retry = 3;
         while ($retry-- > 0) {
-            $ret = $this->mysqli->query($sql);
-            $errno = $this->mysqli->errno;
+            $ret = $this->db->query($sql);
+            $errno = $this->db->errno;
             if ($errno === 0) {
                 return $ret;
             }
@@ -416,29 +429,29 @@ class DBMysqli {
             $this->_connect($this->host, $this->username, $this->password, $this->dbname, $this->port);
         }
 
-        Trace::fatal('query failed. errno:'.$this->mysqli->errno.' error:'.$this->mysqli->error, __FILE__, __LINE__);
+        Trace::fatal('query failed. errno:'.$this->db->errno.' error:'.$this->db->error, __FILE__, __LINE__);
         Trace::fatal('sql: '.$sql, __FILE__, __LINE__);
-        trigger_error('query failed. errno:'.$this->mysqli->errno.' error:'.$this->mysqli->error);
+        trigger_error('query failed. errno:'.$this->db->errno.' error:'.$this->db->error);
     }
 
     public function realEscapeString($escapestr) {
-        return $this->mysqli->real_escape_string($escapestr);
+        return $this->db->real_escape_string($escapestr);
     }
 
     public function error() {
-        return $this->mysqli->error;
+        return $this->db->error;
     }
 
     public function errno() {
-        return $this->mysqli->errno;
+        return $this->db->errno;
     }
 
     public function affectedRows() {
-        return $this->mysqli->affected_rows;
+        return $this->db->affected_rows;
     }
 
     public function insertID() {
-        return $this->mysqli->insert_id;
+        return $this->db->insert_id;
     }
 
 }
