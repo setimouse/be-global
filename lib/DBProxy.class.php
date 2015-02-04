@@ -45,7 +45,7 @@ class DBProxy {
 
     public static function getDBAdapter() {
         if (is_null(self::$dbAdapter)) {
-            self::$dbAdapter = ConfigHelper::getDBAdapter();
+            self::$dbAdapter = ConfigHelper::getInstance()->getDBAdapter();
         }
         return self::$dbAdapter;
     }
