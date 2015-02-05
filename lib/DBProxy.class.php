@@ -426,7 +426,7 @@ class DBMysqli extends DBAdapter {
                 return $ret;
             }
 
-            $this->_connect($this->host, $this->username, $this->password, $this->dbname, $this->port);
+            $this->connect();
         }
 
         Trace::fatal('query failed. errno:'.$this->db->errno.' error:'.$this->db->error, __FILE__, __LINE__);
