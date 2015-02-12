@@ -12,7 +12,7 @@ abstract class MImageService {
     public static function writeImage($filepath, $imageData) {
         $path = dirname($filepath);
         if (!file_exists($path)) {
-            mkdir($path, true);
+            mkdir($path, 0755, true);
             chmod($path, 0755);
         }
         $ret = file_put_contents($filepath, $imageData);
@@ -28,7 +28,7 @@ abstract class MImageService {
         $path = static::imageRoot();
         $path.= self::imageHashPath($hash);
         if (!file_exists($path) && $create) {
-            mkdir($path, true);
+            mkdir($path, 0755, true);
             chmod($path, 0755);
         }
         $filepath = $path.'/'.$hash;
