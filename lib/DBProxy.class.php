@@ -402,7 +402,7 @@ class DBMysqli extends DBAdapter {
 
     public function connect() {
         $mysqli = new mysqli($this->host, $this->username, $this->password, $this->dbname, $this->port);
-        if (!$mysqli) {
+        if ($mysqli->connect_errno) {
             trigger_error('connect db failed. error:'.$mysqli->errno);
         }
         $this->db = $mysqli;
@@ -418,6 +418,7 @@ class DBMysqli extends DBAdapter {
         while ($retry-- > 0) {
             $ret = $this->db->query($sql);
             $errno = $this->db->errno;
+            $error = $this->db->error;
             if ($errno === 0) {
                 return $ret;
             }
@@ -429,9 +430,9 @@ class DBMysqli extends DBAdapter {
             $this->connect();
         }
 
-        Trace::fatal('query failed. errno:'.$this->db->errno.' error:'.$this->db->error, __FILE__, __LINE__);
+        Trace::fatal('query failed. errno:'.$errno.' error:'.$error, __FILE__, __LINE__);
         Trace::fatal('sql: '.$sql, __FILE__, __LINE__);
-        trigger_error('query failed. errno:'.$this->db->errno.' error:'.$this->db->error);
+        trigger_error('query failed. errno:'.$errno.' error:'.$error);
     }
 
     public function realEscapeString($escapestr) {
