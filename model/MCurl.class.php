@@ -118,7 +118,7 @@ class MCurl {
             Trace::debug('timeout: '.$this->timeout);
 
             $ch = curl_init($this->url);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $this->postFields);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($this->postFields, '&'));
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
             curl_setopt($ch, CURLOPT_HEADER, 0);
             // curl_setopt($ch, CURLOPT_NOSIGNAL, 1);
