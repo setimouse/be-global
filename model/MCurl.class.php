@@ -25,6 +25,8 @@ class MCurl {
     protected $retry;
     protected $retrySleep;
 
+    protected $headerCallback;
+
     protected static $error;
 
     protected $arrOptions;
@@ -93,6 +95,11 @@ class MCurl {
         $this->retrySleep = $retrySleep;
     }
 
+    public function setHeaderCallback($headerCallback) {
+        DAssert::assert(is_callable($headerCallback), 'illegal callback');
+        $this->headerCallback = $headerCallback;
+    }
+
     public function removeOption($key) {
         if (isset($this->arrOptions[$key])) {
             unset($this->arrOptions[$key]);
@@ -118,7 +125,14 @@ class MCurl {
             Trace::debug('timeout: '.$this->timeout);
 
             $ch = curl_init($this->url);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $this->postFields);
+            if ($this->method === MCurl::METHOD_POST) {
+                curl_setopt($ch, CURLOPT_POST, true);
+            /*
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $this->postFields);
+            /*/
+                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($this->postFields, '&'));
+            //*/
+            }
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
             curl_setopt($ch, CURLOPT_HEADER, 0);
             // curl_setopt($ch, CURLOPT_NOSIGNAL, 1);
@@ -146,6 +160,10 @@ class MCurl {
                         curl_setopt($ch, CURLOPT_PROXYUSERPWD, $config['username'].':'.$config['password']);
                     }
                 }
+            }
+
+            if ($this->headerCallback) {
+                curl_setopt($ch, CURLOPT_HEADERFUNCTION, $this->headerCallback);
             }
 
             //  apply user options
