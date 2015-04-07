@@ -127,11 +127,7 @@ class MCurl {
             $ch = curl_init($this->url);
             if ($this->method === MCurl::METHOD_POST) {
                 curl_setopt($ch, CURLOPT_POST, true);
-            /*
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $this->postFields);
-            /*/
-                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($this->postFields, '&'));
-            //*/
             }
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
             curl_setopt($ch, CURLOPT_HEADER, 0);
