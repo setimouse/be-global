@@ -53,8 +53,8 @@ class MImage {
         $this->image = $im;
     }
 
-    public function saveTo($path) {
-        imagejpeg($this->getImage(), $path, 80);
+    public function saveTo($path, $quality = 75) {
+        imagejpeg($this->getImage(), $path, $quality);
     }
 
     public function display() {
