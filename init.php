@@ -5,7 +5,7 @@ define('GLMODEL', BEGLOBAL.'model/');
 define('GLLIB', BEGLOBAL.'lib/');
 define('GLUTIL', BEGLOBAL.'util/');
 
-DAutoloader::addAutoloadPathArray(
+DAutoloader::getInstance()->addAutoloadPathArray(
     array(
         GLLIB,
         GLMODEL,
