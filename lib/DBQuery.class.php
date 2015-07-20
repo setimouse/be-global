@@ -165,7 +165,7 @@ class DBQuery {
     }
 
     public function realEscapeString($string) {
-        return $this->dbConnection->dbAdapter()->realEscapeString($string);
+        return $this->dbAdapter()->realEscapeString($string);
     }
 
     /**
