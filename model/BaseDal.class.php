@@ -111,7 +111,7 @@ abstract class BaseDal {
 
     protected static function realEscapeString(&$str, $db = null, $rw = 'r') {
         $dbQuery = static::getDBQuery($db, $rw);
-        $str = $dbQuery->rs2keyarray($str);
+        $str = $dbQuery->realEscapeString($str);
         return $str;
     }
 

@@ -43,6 +43,30 @@ abstract class BaseModuleDal extends BaseDal {
         }
     }
 
+    protected static function doDelete($sql, $db = null, $rw = 'r') {
+        self::$lastQueryMethod = __FUNCTION__;
+        self::$lastArgs = func_get_args();
+        return call_user_func_array(array('parent', self::$lastQueryMethod), self::$lastArgs);
+    }
+
+    protected static function doUpdate($table, $updates, $where, $limit = 0x7fffffff, $db = null, $rw = 'w') {
+        self::$lastQueryMethod = __FUNCTION__;
+        self::$lastArgs = func_get_args();
+        return call_user_func_array(array('parent', self::$lastQueryMethod), self::$lastArgs);
+    }
+
+    protected static function doInsertUpdate($table, $arrIns, $arrUpd, $db = null, $rw = 'w') {
+        self::$lastQueryMethod = __FUNCTION__;
+        self::$lastArgs = func_get_args();
+        return call_user_func_array(array('parent', self::$lastQueryMethod), self::$lastArgs);
+    }
+
+    protected static function doInsert($table, $fields_values, $db = null, $rw = 'w') {
+        self::$lastQueryMethod = __FUNCTION__;
+        self::$lastArgs = func_get_args();
+        return call_user_func_array(array('parent', self::$lastQueryMethod), self::$lastArgs);
+    }
+
     protected static function doCreateTables($sql, $db = null) {
         $dbQuery = static::getDBQuery($db, 'w');
         $ret = $dbQuery->doCreateTable($sql);
