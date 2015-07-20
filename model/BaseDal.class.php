@@ -40,7 +40,7 @@ abstract class BaseDal {
         return static::rs2firstvalue($sql, $db);
     }
 
-    protected static function doDelete($sql, $db = null, $rw = 'r') {
+    protected static function doDelete($sql, $db = null, $rw = 'w') {
         $dbQuery = static::getDBQuery($db, $rw);
         $ret = $dbQuery->doDelete($sql);
         return static::result($ret, $dbQuery);

@@ -43,7 +43,7 @@ abstract class BaseModuleDal extends BaseDal {
         }
     }
 
-    protected static function doDelete($sql, $db = null, $rw = 'r') {
+    protected static function doDelete($sql, $db = null, $rw = 'w') {
         self::$lastQueryMethod = __FUNCTION__;
         self::$lastArgs = func_get_args();
         return call_user_func_array(array('parent', self::$lastQueryMethod), self::$lastArgs);
