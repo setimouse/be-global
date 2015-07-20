@@ -9,6 +9,4 @@
  */
 class DBException extends Exception {
 
-
-
 }

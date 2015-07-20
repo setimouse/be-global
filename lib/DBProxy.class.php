@@ -2,10 +2,12 @@
 /**
  * DBProxy
  *
+ * deprecated since 2015 7 20
+ *
  * @author liyan
  * @since 2014 4 24
  */
-class DBProxy {
+class DBProxy_Deprecated {
 
     protected static $stat = array('select' => 0, 'insert' => 0, 'update' => 0, 'delete' => 0, 'read' => 0, 'write' => 0);
 
