@@ -13,6 +13,10 @@ class DBConnection {
         $this->dbAdapter = $dbAdapter;
     }
 
+    public function dbAdapter() {
+        return $this->dbAdapter;
+    }
+
     public function connect($config) {
         $hostport = $config['hosts'][array_rand($config['hosts'])];
 
@@ -35,22 +39,6 @@ class DBConnection {
 
     public function close() {
         $this->dbAdapter->close();
-    }
-
-    public function query($sql) {
-        try {
-            return $this->dbAdapter->query($sql);
-        } catch (Exception $e) {
-            throw $e;
-        }
-    }
-
-    public function error() {
-        return $this->dbAdapter->error();
-    }
-
-    public function errno() {
-        return $this->dbAdapter->errno();
     }
 
 }

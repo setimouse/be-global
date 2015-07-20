@@ -5,7 +5,7 @@
  */
 class DBReadWrite {
 
-    private static $connPool = array();
+    protected static $connPool = array();
 
     protected $dbConfig;
 

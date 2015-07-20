@@ -9,8 +9,6 @@
  */
 abstract class BaseDal {
 
-    protected static $dbpool = array();
-
     protected static function defaultDB() {
         return null;
     }
@@ -19,7 +17,7 @@ abstract class BaseDal {
         if (is_null($db)) {
             $db = static::defaultDB();
         }
-        DAssert::assert(!is_null($db), 'db should not be null!');
+        DAssert::assert(!is_null($db), 'db should not be null! class:'.get_called_class());
         DAssert::assert(in_array($rw, array('r', 'w')), 'illegal rw');
 
         $dbConfig = Config::runtimeConfigForKeyPath('database.$.'.$db);
@@ -35,6 +33,38 @@ abstract class BaseDal {
             throw new DBException($dbQuery->error(), $dbQuery->errno());
         }
         return $ret;
+    }
+
+    protected static function foundrows($db = null, $rw = 'r') {
+        $sql = "SELECT FOUND_ROWS()";
+        return static::rs2firstvalue($sql, $db);
+    }
+
+    protected static function doDelete($sql, $db = null, $rw = 'r') {
+        $dbQuery = static::getDBQuery($db, $rw);
+        $ret = $dbQuery->doDelete($sql);
+        return static::result($ret, $dbQuery);
+    }
+
+    protected static function doUpdate($table, $updates, $where, $limit = 0x7fffffff, $db = null, $rw = 'w') {
+        $dbQuery = static::getDBQuery($db, $rw);
+        $sql = $dbQuery->updateStatement($table, $updates, $where, $limit);
+        $ret = $dbQuery->doUpdate($sql);
+        return static::result($ret, $dbQuery);
+    }
+
+    protected static function doInsertUpdate($table, $arrIns, $arrUpd, $db = null, $rw = 'w') {
+        $dbQuery = static::getDBQuery($db, $rw);
+        $sql = $dbQuery->insertOrUpdateStatement($table, $arrIns, $arrUpd);
+        $ret = $dbQuery->doInsert($sql);
+        return static::result($ret, $dbQuery);
+    }
+
+    protected static function doInsert($table, $fields_values, $db = null, $rw = 'w') {
+        $dbQuery = static::getDBQuery($db, $rw);
+        $sql = $dbQuery->insertStatement($table, $fields_values);
+        $ret = $dbQuery->doInsert($sql);
+        return static::result($ret, $dbQuery);
     }
 
     protected static function rs2array($sql, $db = null, $rw = 'r') {
@@ -67,10 +97,54 @@ abstract class BaseDal {
         return static::result($ret, $dbQuery);
     }
 
+    protected static function rs2firstvalue($sql, $db = null, $rw = 'r') {
+        $dbQuery = static::getDBQuery($db, $rw);
+        $ret = $dbQuery->rs2firstvalue($sql);
+        return static::result($ret, $dbQuery);
+    }
+
+    protected static function rs2oneColumnArray($sql, $db = null, $rw = 'r') {
+        $dbQuery = static::getDBQuery($db, $rw);
+        $ret = $dbQuery->rs2oneColumnArray($sql);
+        return static::result($ret, $dbQuery);
+    }
+
     protected static function realEscapeString(&$str, $db = null, $rw = 'r') {
         $dbQuery = static::getDBQuery($db, $rw);
         $str = $dbQuery->rs2keyarray($str);
         return $str;
+    }
+
+    protected static function insertID($db = null, $rw = 'w') {
+        $dbQuery = static::getDBQuery($db, $rw);
+        $ret = $dbQuery->insertID();
+        return static::result($ret, $dbQuery);
+    }
+
+    protected static function affectedRows($db = null, $rw = 'w') {
+        $dbQuery = static::getDBQuery($db, $rw);
+        $ret = $dbQuery->affectedRows();
+        return static::result($ret, $dbQuery);
+    }
+
+    protected static function beginTransaction($db = null, $rw = 'w') {
+        $dbQuery = static::getDBQuery($db, $rw);
+        return $dbQuery->beginTransaction();
+    }
+
+    protected static function endTransaction($db = null, $rw = 'w') {
+        $dbQuery = static::getDBQuery($db, $rw);
+        return $dbQuery->endTransaction();
+    }
+
+    protected static function commit($db = null, $rw = 'w') {
+        $dbQuery = static::getDBQuery($db, $rw);
+        return $dbQuery->commit();
+    }
+
+    protected static function rollback($db = null, $rw = 'w') {
+        $dbQuery = static::getDBQuery($db, $rw);
+        return $dbQuery->rollback();
     }
 
 }

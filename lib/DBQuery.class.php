@@ -27,32 +27,44 @@ class DBQuery {
         $this->doQuery('ROLLBACK');
     }
 
+    protected function dbAdapter() {
+        return $this->dbConnection->dbAdapter();
+    }
+
     public function doQuery($sql) {
-        return $this->dbConnection->query($sql);
+        return $this->dbAdapter()->query($sql);
     }
 
     public function doInsert($sql) {
-        return $this->dbConnection->query($sql);
+        return $this->doQuery($sql);
     }
 
     public function doUpdate($sql) {
-        return $this->dbConnection->query($sql);
+        return $this->doQuery($sql);
     }
 
     public function doDelete($sql) {
-        return $this->dbConnection->query($sql);
+        return $this->doQuery($sql);
     }
 
     public function doSelect($sql) {
-        return $this->dbConnection->query($sql);
+        return $this->doQuery($sql);
+    }
+
+    public function doCreateTable($sql) {
+        return $this->doQuery($sql);
     }
 
     public function error() {
-        return $this->dbConnection->error();
+        return $this->dbAdapter()->error();
     }
 
     public function errno() {
-        return $this->dbConnection->errno();
+        return $this->dbAdapter()->errno();
+    }
+
+    public function affectedRows() {
+        return $this->dbAdapter()->affectedRows();
     }
 
     public function rs2array($sql) {
@@ -153,7 +165,7 @@ class DBQuery {
     }
 
     public function realEscapeString($string) {
-        return $this->dbConnection->realEscapeString($string);
+        return $this->dbConnection->dbAdapter()->realEscapeString($string);
     }
 
     /**

@@ -29,6 +29,6 @@ abstract class BaseModule {
         $this->database = $database;
     }
 
-    abstract public function createTableSQL();
+    abstract public function createTablesSQL();
 
 }
