@@ -14,8 +14,11 @@ abstract class BaseModuleDal extends BaseDal {
 
     private static $tryCreateTable = false;
 
+    abstract protected function createTable();
+
     protected static function defaultDB() {
         $module = static::module();
+        DAssert::assert($module instanceof IDatabaseModule, 'module must be database module');
         return $module->database();
     }
 
@@ -32,11 +35,7 @@ abstract class BaseModuleDal extends BaseDal {
 
             if (1146 == $e->getCode()) {   # Table doesn't exist, errno: 1146
                 self::$tryCreateTable = true;
-                $module = static::module();
-                $arrSql = $module::createTablesSQL();
-                foreach ($arrSql as $sql) {
-                    static::doCreateTables($sql);
-                }
+                static::createTable();
                 return call_user_func_array(array('parent', self::$lastQueryMethod), self::$lastArgs);
             }
             throw $e;
@@ -67,7 +66,7 @@ abstract class BaseModuleDal extends BaseDal {
         return call_user_func_array(array('parent', self::$lastQueryMethod), self::$lastArgs);
     }
 
-    protected static function doCreateTables($sql, $db = null) {
+    protected static function doCreateTable($sql, $db = null) {
         $dbQuery = static::getDBQuery($db, 'w');
         $ret = $dbQuery->doCreateTable($sql);
         return static::result($ret, $dbQuery);

@@ -13,7 +13,7 @@ abstract class BaseModule {
 
     protected static $instance;
 
-    public static function getInstance() {
+    private static function getInstance() {
         if (!self::$instance) {
             $class = get_called_class();
             self::$instance = new $class;
@@ -21,14 +21,9 @@ abstract class BaseModule {
         return self::$instance;
     }
 
-    public function database() {
-        return $this->database;
+    public static function module() {
+        $module = self::getInstance();
+        return $module;
     }
-
-    public function setDatabase($database) {
-        $this->database = $database;
-    }
-
-    abstract public function createTablesSQL();
 
 }
