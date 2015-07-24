@@ -9,8 +9,6 @@
  */
 abstract class BaseModule {
 
-    protected $database;
-
     protected static $instance;
 
     private static function getInstance() {
@@ -24,6 +22,10 @@ abstract class BaseModule {
     public static function module() {
         $module = self::getInstance();
         return $module;
+    }
+
+    public static function init() {
+
     }
 
 }
