@@ -21,9 +21,12 @@ abstract class XBaseAction extends BaseAction {
         return $this->display($template);
     }
 
+    protected function shouldDisplay($template) {
+        return true;
+    }
+
     protected function display($template) {
-        if (MDict::D('is_debug')) {
-            $this->displayDebug();
+        if (!$this->shouldDisplay($template)) {
             return;
         }
 
@@ -40,13 +43,13 @@ abstract class XBaseAction extends BaseAction {
         $this->display(dirname(__FILE__).'/../template/jsonrespond.tpl.php');
     }
 
-    protected function displayJsonSuccess($data = null) {
-        $jsonRespond = MJsonRespond::respondSuccess('success', $data);
+    protected function displayJsonSuccess($msg = 'success', $data = null) {
+        $jsonRespond = MJsonRespond::respondSuccess($msg, $data);
         $this->displayJson($jsonRespond);
     }
 
-    protected function displayJsonFail($data = null) {
-        $jsonRespond = MJsonRespond::respondFail('fail', $data);
+    protected function displayJsonFail($msg = 'fail', $data = null) {
+        $jsonRespond = MJsonRespond::respondFail($msg, $data);
         $this->displayJson($jsonRespond);
     }
 
